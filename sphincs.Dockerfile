@@ -20,7 +20,7 @@ RUN git clone --branch main https://github.com/open-quantum-safe/liboqs.git
 RUN cd liboqs && \
     mkdir build && \
     cd build && \
-    cmake -GNinja -DOQS_USE_OPENSSL=OFF -DCMAKE_INSTALL_PREFIX=/crypt/quantum_openssl/oqs .. && \
+    cmake -GNinja -DBUILD_SHARED_LIBS=ON -DOQS_USE_OPENSSL=OFF -DCMAKE_INSTALL_PREFIX=/crypt/quantum_openssl/oqs .. && \
     ninja && \
     ninja install
 
