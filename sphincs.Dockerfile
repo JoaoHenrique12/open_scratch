@@ -26,7 +26,7 @@ RUN cd liboqs && \
 
 # Build the fork
 RUN cd quantum_openssl && \
-    ./Configure no-shared linux-x86_64 -lm && \
+    ./Configure linux-x86_64 -lm && \
     make -j4
 CMD ["bash"]
 
