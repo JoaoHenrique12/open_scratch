@@ -28,19 +28,32 @@ RUN cd liboqs && \
 RUN cd quantum_openssl && \
     ./Configure linux-x86_64 -lm && \
     make -j4
+
+FROM ubuntu:24.04 AS final_image
+
+COPY --from=crypt_builder /crypt/quantum_openssl/apps/openssl /usr/local/bin/openssl
+COPY --from=crypt_builder /crypt/quantum_openssl/libssl.so /usr/local/lib/
+COPY --from=crypt_builder /crypt/quantum_openssl/libcrypto.so /usr/local/lib/
+COPY --from=crypt_builder /crypt/quantum_openssl/oqs/lib/liboqs.so /usr/local/lib/
+
+RUN echo '/usr/local/lib' > /etc/ld.so.conf.d/oqs-openssl.conf && \
+    ldconfig
+
+ENV LD_LIBRARY_PATH=/usr/local/lib
+
 CMD ["bash"]
 
 # list algorithms
-# ./openssl list -public-key-methods | grep -i sphincs
+# openssl list -public-key-methods | grep -i sphincs
 
 # private key
-# ./openssl genpkey -algorithm sphincssha2128fsimple  -out sphincs_private.pem
+# openssl genpkey -algorithm sphincssha2128fsimple  -out sphincs_private.pem
 
 # public key
-# ./openssl pkey -in sphincs_private.pem -pubout -out sphincs_public.pem
+# openssl pkey -in sphincs_private.pem -pubout -out sphincs_public.pem
 
 # signing without hashing message
-# ./openssl dgst -sign sphincs_private.pem -out message.sig message.txt
+# openssl dgst -sign sphincs_private.pem -out message.sig message.txt
 
 # verify
-# ./openssl dgst -verify sphincs_public.pem -signature message.sig message.txt
+# openssl dgst -verify sphincs_public.pem -signature message.sig message.txt
