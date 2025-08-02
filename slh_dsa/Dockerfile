@@ -22,13 +22,28 @@ RUN ./config --prefix=/usr/local --openssldir=/usr/local/ssl -Wl,-rpath=/usr/loc
     make -j$(nproc) && \
     make install
 
+# Compilando um código c++ que usa o slh-dsa da openssl.
+## Configura o loader para encontrar as bibliotecas
+RUN echo '/usr/local/lib64' > /etc/ld.so.conf.d/openssl.conf && \
+    ldconfig
+
+ENV LD_LIBRARY_PATH=/usr/local/lib64
+
+WORKDIR /app
+COPY main.cpp /app
+RUN g++ -std=c++17 -Wall -o slh_dsa_example main.cpp \
+    -I/usr/local/include \
+    -L/usr/local/lib64 -lcrypto -lssl \
+    -Wl,-rpath=/usr/local/lib64
+
 FROM ubuntu:24.04 AS final_image
 
 COPY --from=crypt_builder /usr/local/bin/openssl /usr/local/bin/
 COPY --from=crypt_builder /usr/local/lib64/ /usr/local/lib64/
 COPY --from=crypt_builder /usr/local/ssl/ /usr/local/ssl/
 
-# Configura o loader para encontrar as bibliotecas
+COPY --from=crypt_builder /app/slh_dsa_example /app/slh_dsa_example
+
 RUN echo '/usr/local/lib64' > /etc/ld.so.conf.d/openssl.conf && \
     ldconfig
 
