@@ -38,18 +38,18 @@ CMD ["bash"]
 
 
 # list algorithms
-# /usr/local/bin/openssl list -signature-algorithms | grep SLH-DSA
+# openssl list -signature-algorithms | grep SLH-DSA
 
 # private key
-# /usr/local/bin/openssl genpkey -algorithm SLH-DSA-SHA2-128f -out slhdsa_private.pem
+# openssl genpkey -algorithm SLH-DSA-SHA2-128f -out slhdsa_private.pem
 
 # public key
-# /usr/local/bin/openssl pkey -in slhdsa_private.pem -pubout -out slhdsa_public.pem
+# openssl pkey -in slhdsa_private.pem -pubout -out slhdsa_public.pem
 
 # signing without hashing message
 ## SLH-DSA, like ML-DSA, is a "raw" signature algorithm, meaning it doesn't automatically hash the input before signing.
 ## You typically sign the raw data or a pre-hashed message. The pkeyutl command is suitable for this.
-# /usr/local/bin/openssl pkeyutl -sign -in message.txt -inkey slhdsa_private.pem -out message.sig -rawin
+# openssl pkeyutl -sign -in message.txt -inkey slhdsa_private.pem -out message.sig -rawin
 
 # verify
-# /usr/local/bin/openssl pkeyutl -verify -in message.txt -pubin -inkey slhdsa_public.pem -sigfile message.sig -rawin
+# openssl pkeyutl -verify -in message.txt -pubin -inkey slhdsa_public.pem -sigfile message.sig -rawin
