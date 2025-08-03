@@ -13,7 +13,7 @@ int main() {
     OpenSSL_add_all_algorithms();
     ERR_load_crypto_strings();
 
-    // --- Key Generation ---
+    // Gerando a chave SPHINCSSHA2128FSIMPLE
     EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_SPHINCSSHA2128FSIMPLE, nullptr);
     if (!ctx) handleErrors();
 
@@ -24,10 +24,11 @@ int main() {
 
     EVP_PKEY_CTX_free(ctx);
 
+    // Mensagem
     const char* msg = "some important message.";
     size_t msg_len = strlen(msg);
 
-    // --- Signing ---
+    // Assinando
     EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
     if (!mdctx) handleErrors();
 
@@ -44,7 +45,7 @@ int main() {
 
     EVP_MD_CTX_free(mdctx);
 
-    // --- Verification ---
+    // Verificando
     mdctx = EVP_MD_CTX_new();
     if (!mdctx) handleErrors();
 
