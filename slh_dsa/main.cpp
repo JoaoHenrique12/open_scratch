@@ -10,7 +10,8 @@ void handleErrors() {
 }
 
 int main() {
-  OpenSSL_add_all_algorithms();
+  OPENSSL_init_crypto(OPENSSL_INIT_ADD_ALL_DIGESTS, nullptr);
+  // melhora a leitura das mensagens de erro ('human-readable')
   ERR_load_crypto_strings();
 
   EVP_PKEY_CTX* keygen_ctx = nullptr;
@@ -61,7 +62,6 @@ int main() {
 
   EVP_MD_CTX_free(mdctx);
   EVP_PKEY_free(pkey);
-  EVP_cleanup();
   ERR_free_strings();
 
   return 0;
