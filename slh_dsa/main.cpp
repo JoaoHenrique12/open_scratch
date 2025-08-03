@@ -17,7 +17,7 @@ int main() {
   EVP_PKEY_CTX* keygen_ctx = nullptr;
   EVP_PKEY* pkey = nullptr;
 
-  // Generate SLH-DSA-SHA2-128f Key
+  // Gerando a chave SLH-DSA-SHA2-128f
   keygen_ctx = EVP_PKEY_CTX_new_from_name(nullptr, "SLH-DSA-SHA2-128f", nullptr);
   if (!keygen_ctx) handleErrors();
 
@@ -26,11 +26,11 @@ int main() {
 
   EVP_PKEY_CTX_free(keygen_ctx);
 
-  // Message
+  // Mensagem
   const char* msg = "SLH-DSA test message";
   size_t msg_len = strlen(msg);
 
-  // Sign
+  // Assinando
   EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
   if (!mdctx) handleErrors();
 
@@ -44,7 +44,7 @@ int main() {
 
   EVP_MD_CTX_free(mdctx);
 
-  // Verify
+  // Verificando
   mdctx = EVP_MD_CTX_new();
   if (!mdctx) handleErrors();
 
