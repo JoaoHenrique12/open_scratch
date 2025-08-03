@@ -10,38 +10,37 @@ void handleErrors() {
 }
 
 int main() {
-    OpenSSL_add_all_algorithms();
+    OPENSSL_init_crypto(OPENSSL_INIT_ADD_ALL_DIGESTS, nullptr);
+    // melhora a leitura das mensagens de erro ('human-readable')
     ERR_load_crypto_strings();
 
-    // Gerando a chave SPHINCSSHA2128FSIMPLE
-    EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_SPHINCSSHA2128FSIMPLE, nullptr);
-    if (!ctx) handleErrors();
-
-    if (EVP_PKEY_keygen_init(ctx) <= 0) handleErrors();
-
+    EVP_PKEY_CTX* keygen_ctx = nullptr;
     EVP_PKEY* pkey = nullptr;
-    if (EVP_PKEY_keygen(ctx, &pkey) <= 0) handleErrors();
 
-    EVP_PKEY_CTX_free(ctx);
+    // Gerando a chave SPHINCSSHA2128FSIMPLE
+    keygen_ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_SPHINCSSHA2128FSIMPLE, nullptr);
+    if (!keygen_ctx) handleErrors();
+
+    if (EVP_PKEY_keygen_init(keygen_ctx) <= 0) handleErrors();
+    if (EVP_PKEY_keygen(keygen_ctx, &pkey) <= 0) handleErrors();
+
+    EVP_PKEY_CTX_free(keygen_ctx);
 
     // Mensagem
-    const char* msg = "some important message.";
+    const char* msg = "SPHINCSSHA2128FSIMPLE test message";
     size_t msg_len = strlen(msg);
 
     // Assinando
     EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
     if (!mdctx) handleErrors();
 
-    if (EVP_DigestSignInit(mdctx, NULL, NULL, NULL, pkey) <= 0)
-        handleErrors();
+    if (EVP_DigestSignInit(mdctx, nullptr, nullptr, nullptr, pkey) <= 0) handleErrors();
 
     size_t siglen = 0;
-    if (EVP_DigestSign(mdctx, NULL, &siglen, (const unsigned char*)msg, msg_len) <= 0)
-        handleErrors();
+    if (EVP_DigestSign(mdctx, nullptr, &siglen, (const unsigned char*)msg, msg_len) <= 0) handleErrors();
 
     std::vector<unsigned char> sig(siglen);
-    if (EVP_DigestSign(mdctx, sig.data(), &siglen, (const unsigned char*)msg, msg_len) <= 0)
-        handleErrors();
+    if (EVP_DigestSign(mdctx, sig.data(), &siglen, (const unsigned char*)msg, msg_len) <= 0) handleErrors();
 
     EVP_MD_CTX_free(mdctx);
 
@@ -49,21 +48,20 @@ int main() {
     mdctx = EVP_MD_CTX_new();
     if (!mdctx) handleErrors();
 
-    if (EVP_DigestVerifyInit(mdctx, NULL, NULL, NULL, pkey) <= 0)
-        handleErrors();
+    if (EVP_DigestVerifyInit(mdctx, nullptr, nullptr, nullptr, pkey) <= 0) handleErrors();
 
-    int ver = EVP_DigestVerify(mdctx, sig.data(), siglen, (const unsigned char*)msg, msg_len);
-    if (ver == 1) {
-        std::cout << "Signature verified.\n";
-    } else if (ver == 0) {
-        std::cout << "Invalid signature.\n";
+    int verify_ok = EVP_DigestVerify(mdctx, sig.data(), siglen, (const unsigned char*)msg, msg_len);
+
+    if (verify_ok == 1) {
+        std::cout << "Signature verified successfully.\n";
+    } else if (verify_ok == 0) {
+        std::cout << "Signature verification failed.\n";
     } else {
         handleErrors();
     }
 
     EVP_MD_CTX_free(mdctx);
     EVP_PKEY_free(pkey);
-    EVP_cleanup();
     ERR_free_strings();
 
     return 0;
