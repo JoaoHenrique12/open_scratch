@@ -8,6 +8,7 @@ RUN apt update && \
     make \
     ninja-build \
     git  \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /crypt
