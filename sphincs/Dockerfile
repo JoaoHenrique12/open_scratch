@@ -30,7 +30,23 @@ RUN cd quantum_openssl && \
     ./Configure linux-x86_64 -lm && \
     make -j4
 
+RUN echo '/usr/local/lib' > /etc/ld.so.conf.d/oqs-openssl.conf && \
+    ldconfig
+
+ENV LD_LIBRARY_PATH=/usr/local/lib
+
+RUN cd quantum_openssl && make install
+
+WORKDIR /app
+COPY main.cpp /app
+RUN g++ -std=c++17 -Wall -o sphincs_example main.cpp \
+  -I/usr/local/include \
+  -L/usr/local/lib -lcrypto -lssl \
+  -Wl,-rpath=/usr/local/lib
+
 FROM ubuntu:24.04 AS final_image
+
+COPY --from=crypt_builder /app /app
 
 COPY --from=crypt_builder /crypt/quantum_openssl/apps/openssl /usr/local/bin/openssl
 COPY --from=crypt_builder /crypt/quantum_openssl/libssl.so /usr/local/lib/
@@ -41,6 +57,8 @@ RUN echo '/usr/local/lib' > /etc/ld.so.conf.d/oqs-openssl.conf && \
     ldconfig
 
 ENV LD_LIBRARY_PATH=/usr/local/lib
+
+WORKDIR /app
 
 CMD ["bash"]
 
