@@ -40,6 +40,41 @@ int write_keys_to_pem(EVP_PKEY* pkey) {
     return 1;
 }
 
+int write_keys_to_pkcs8(EVP_PKEY* pkey) {
+    // Write PKCS#8 private key to file
+    FILE* privkey_file = fopen("privkey_pkcs8.pem", "wb");
+    if (!privkey_file) {
+        std::cerr << "Error opening private key file.\n";
+        return 0;
+    }
+
+    if (PEM_write_PKCS8PrivateKey(privkey_file, pkey, nullptr, nullptr, 0, nullptr, nullptr) <= 0) {
+        fclose(privkey_file);
+        handleErrors();
+        return 0; // Ensure to return a value on error
+    }
+    fclose(privkey_file);
+    std::cout << "Private key saved to 'privkey_pkcs8.pem'.\n";
+
+    // Write public key to file
+    FILE* pubkey_file = fopen("pubkey.pem", "wb");
+    if (!pubkey_file) {
+        std::cerr << "Error opening public key file.\n";
+        return 0;
+    }
+
+    if (PEM_write_PUBKEY(pubkey_file, pkey) <= 0) {
+        fclose(pubkey_file);
+        handleErrors();
+        return 0; // Ensure to return a value on error
+    }
+    fclose(pubkey_file);
+    std::cout << "Public key saved to 'pubkey.pem'.\n";
+
+    return 1;
+}
+
+
 EVP_PKEY* read_public_key_from_pem(const char* filename) {
     FILE* pubkey_file = fopen(filename, "rb");
     if (!pubkey_file) {
