@@ -30,8 +30,8 @@ RUN echo '/usr/local/lib64' > /etc/ld.so.conf.d/openssl.conf && \
 ENV LD_LIBRARY_PATH=/usr/local/lib64
 
 WORKDIR /app
-COPY save_pem_var.cpp /app
-RUN g++ -std=c++17 -Wall -o slh_dsa_example save_pem_var.cpp \
+COPY save_der_var.cpp /app
+RUN g++ -std=c++17 -Wall -o slh_dsa_example save_der_var.cpp \
     -I/usr/local/include \
     -L/usr/local/lib64 -lcrypto -lssl \
     -Wl,-rpath=/usr/local/lib64
