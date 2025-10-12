@@ -11,6 +11,93 @@ void handleErrors() {
     abort();
 }
 
+
+typedef struct slhdsa_key_material_t {
+    unsigned long sizePrivateKey;
+    unsigned long sizePublicKey;
+    void* derPrivateKey;
+    void* derPublicKey;
+
+    slhdsa_key_material_t() {
+        sizePrivateKey = 0;
+        sizePublicKey = 0;
+        derPrivateKey = 0;
+        derPublicKey = 0;
+    }
+} slhdsa_key_material_t;
+
+
+void crypto_free_slhdsa(slhdsa_key_material_t* keyMat)
+{
+    if (keyMat == NULL)
+        return;
+
+    if (keyMat->derPrivateKey)
+        OPENSSL_free(keyMat->derPrivateKey);
+
+    if (keyMat->derPublicKey)
+        OPENSSL_free(keyMat->derPublicKey);
+
+    free(keyMat);
+}
+
+slhdsa_key_material_t* crypto_malloc_slhdsa(EVP_PKEY* pkey)
+{
+    if (pkey == NULL)
+        return NULL;
+
+    slhdsa_key_material_t* keyMat =
+        (slhdsa_key_material_t*)calloc(1, sizeof(slhdsa_key_material_t));
+    if (keyMat == NULL)
+        return NULL;
+
+    unsigned char* buf = NULL;
+    int len = 0;
+
+    // --- DER encode public key (SubjectPublicKeyInfo) ---
+    len = i2d_PUBKEY(pkey, NULL);
+    if (len <= 0) {
+        crypto_free_slhdsa(keyMat);
+        return NULL;
+    }
+    buf = (unsigned char*)OPENSSL_malloc(len);
+    if (!buf) {
+        crypto_free_slhdsa(keyMat);
+        return NULL;
+    }
+    unsigned char* p = buf;
+    if (i2d_PUBKEY(pkey, &p) <= 0) {
+        OPENSSL_free(buf);
+        crypto_free_slhdsa(keyMat);
+        return NULL;
+    }
+    keyMat->sizePublicKey = (unsigned long)len;
+    keyMat->derPublicKey = buf;
+
+    // --- DER encode private key (PKCS#8) ---
+    len = i2d_PrivateKey(pkey, NULL);
+    if (len <= 0) {
+        crypto_free_slhdsa(keyMat);
+        return NULL;
+    }
+    buf = (unsigned char*)OPENSSL_malloc(len);
+    if (!buf) {
+        crypto_free_slhdsa(keyMat);
+        return NULL;
+    }
+    p = buf;
+    if (i2d_PrivateKey(pkey, &p) <= 0) {
+        OPENSSL_free(buf);
+        crypto_free_slhdsa(keyMat);
+        return NULL;
+    }
+    keyMat->sizePrivateKey = (unsigned long)len;
+    keyMat->derPrivateKey = buf;
+
+    return keyMat;
+}
+
+
 int main() {
     OPENSSL_init_crypto(OPENSSL_INIT_ADD_ALL_DIGESTS, nullptr);
     ERR_load_crypto_strings();
@@ -27,6 +114,16 @@ int main() {
 
     EVP_PKEY_CTX_free(keygen_ctx);
 
+
+	slhdsa_key_material_t* keyMat = crypto_malloc_slhdsa(pkey);
+
+    std::cout << "key material:" << "\n";
+    std::cout << "public:" << "(" << keyMat->sizePublicKey <<")" << keyMat->derPublicKey << "\n";
+    std::cout << "private:" << "(" << keyMat->sizePrivateKey <<")" << keyMat->derPrivateKey << "\n";
+
+    crypto_free_slhdsa(keyMat);
+
+    return 0;
     // --- Save Private Key in DER (PKCS#8) ---
     std::vector<unsigned char> priv_der;
     {
